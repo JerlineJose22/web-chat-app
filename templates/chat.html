@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        .notification-badge {
+            background-color: red;
+            color: white;
+            border-radius: 50%;
+            padding: 5px;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+
+        .border {
+            border-top: 1px solid gray;
+            border-bottom: 1px solid gray;
+            width: 100%;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="main-children" style="display: flex; align-items: flex-end; flex-direction: column; margin-right: 50px;">
+        <div style="display: flex; align-items: center; flex-direction: column;">
+            <h1 style="color: aliceblue;">{{ username }}</h1>
+            <a href="{{ url_for('logout') }}">Logout</a>
+        </div>
+    </div>
+    <div class="container">
+        <div class="user-list">
+            <div id="users"></div>
+        </div>
+
+        <div class="chat-box">
+            <h3>Chat</h3>
+            <div id="recipient" class="recipient-info">Chatting with: None</div>
+            <div id="chat-messages" class="messages"></div>
+            <div class="message-input">
+                <input id="message" type="text" placeholder="Type your message">
+                <button onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        const username = "{{ username }}";
+        let currentRecipient = null;
+
+        function setRecipient(user) {
+            currentRecipient = user;
+            document.getElementById('recipient').innerText = `Chatting with: ${user}`;
+            document.getElementById('chat-messages').innerHTML = ''; // Clear messages when changing recipient
+            fetchChatHistory(user);
+        }
+
+        document.getElementById('message').addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+                event.preventDefault(); // Prevent default Enter key behavior
+            }
+        });
+
+        async function sendMessage() {
+            const message = document.getElementById('message').value;
+
+            if (currentRecipient) {
+                const response = await fetch('/send_message', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        sender: username,
+                        recipient: currentRecipient,
+                        message: message,
+                        timestamp: fasf
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    const chatMessages = document.getElementById('chat-messages');
+                    const timestamp = formatTimestamp(result.timestamp);
+                    chatMessages.innerHTML += `<div class="message sent"><b>Me:</b> ${message}<div class="timestamp">${timestamp}</div></div>`;
+                    document.getElementById('message').value = ''; // Clear the input field
+                    chatMessages.scrollTop = chatMessages.scrollHeight; // Auto scroll to bottom
+                    console.log("message sent to topic");
+                } else {
+                    alert('Failed to send message.');
+                }
+            } else {
+                alert('Please select a User.');
+            }
+        }
+
+        function formatTimestamp(timestamp) {
+            console.log("Raw timestamp:", timestamp);  // Log the raw timestamp
+            const date = new Date(timestamp);
+            console.log("Parsed date:", date);  // Log the parsed date object
+            const hours = date.getHours().toString().padStart(2, '0');
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            return `${hours}:${minutes}`;
+        }
+    
+
+        async function fetchMessages() {
+            const response = await fetch('/get_messages');
+            const data = await response.json();
+            if (Array.isArray(data)) {  // Check if data is an array
+                const chatMessages = document.getElementById('chat-messages');
+                data.forEach(message => {
+                    console.log(message);
+                    if (message.sender === currentRecipient && message.recipient === username) {
+                        const messageClass = message.sender === username ? 'sent' : 'received';
+                        const timestamp = formatTimestamp(message.timestamp);
+                        chatMessages.innerHTML += `<div class="message ${messageClass}"><b>${message.sender}:</b> ${message.message}<div class="timestamp">${timestamp}</div></div>`;
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                        console.log("message recieved for ", message.recipient);
+                        markAsRead();
+                    } else { console.log("not match condition"); }
+                });
+            } else {
+                console.error('Invalid data format:', data);
+            }
+        }
+
+        // Fetch messages every 1 seconds
+        setInterval(fetchMessages, 1000);
+        fetchMessages();
+
+        async function fetchChatHistory(recipient) {
+            const response = await fetch(`/chat_history/${recipient}`);
+            const history = await response.json();
+            const chatMessages = document.getElementById('chat-messages');
+            history.forEach(function (msg) {
+                const messageClass = msg.sender === username ? 'sent' : 'received';
+                const timestamp = formatTimestamp(msg.timestamp);
+                chatMessages.innerHTML += `<div class="message ${messageClass}"><b>${msg.sender === username ? 'Me' : msg.sender}:</b> ${msg.content}<div class="timestamp">${timestamp}</div></div>`;
+            });
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        async function markAsRead() {
+            if (currentRecipient) {
+                const response = await fetch('/mark_read', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        sender: username,
+                        recipient: currentRecipient,
+
+                    })
+                });
+            }
+        }
+
+        function fetchUsers() {
+            fetch('/users')
+                .then(response => response.json())
+                .then(users => {
+                    const usersList = document.getElementById('users');
+                    usersList.innerHTML = ''; // Clear the current user list
+                    users.forEach(function (user) {
+                        if (user.username !== username) {
+                            const userItem = document.createElement('div');
+                            userItem.className = 'border';
+                            userItem.textContent = user.username;
+
+                            if (user.unread_count > 0 && user.username !== currentRecipient) {
+                                const badge = document.createElement('span');
+                                badge.className = 'notification-badge';
+                                badge.textContent = user.unread_count;
+                                userItem.appendChild(badge);
+                            }
+
+                            userItem.style.height = '50px';
+                            userItem.style.width = '100%';
+                            userItem.style.fontSize = 'larger';
+                            userItem.style.padding = '1px 7px';
+
+                            userItem.onclick = () => setRecipient(user.username);
+                            usersList.appendChild(userItem);
+                        }
+                    });
+                });
+        }
+
+        window.onload = () => {
+            fetchUsers();
+            setInterval(fetchUsers, 1000); // Auto-refresh every 1 seconds
+        };
+    </script>
+</body>
+
+</html>
