@@ -14,7 +14,7 @@ This web chat application allows users to communicate in real-time using Kafka a
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/web-chat-app.git
+   git clone https://github.com/JerlineJose22/web-chat-app.git
    cd web-chat-app
    ```
 
