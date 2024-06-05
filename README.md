@@ -7,7 +7,6 @@ This web chat application allows users to communicate in real-time using Kafka a
 - **User Authentication**: Users can register, login, and logout securely.
 - **Real-time Messaging**: Messages are delivered in real-time using Kafka.
 - **Message Persistence**: Messages are stored in PostgreSQL for later retrieval.
-- **User Status**: Users can see the online/offline status of other users.
 - **Chat History**: Users can view their chat history with other users.
 - **Notification Badge**: Displays unread message count in the user list.
 - **Responsive Design**: The frontend is designed to be responsive across devices.
