@@ -16,7 +16,7 @@ from datetime import datetime
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
 app.config['SQLALCHEMY_DATABASE_URI']=os.getenv('DATABASE_URL',
-                                            'postgresql://postgres:9626831649@localhost/postgres')
+                                            'postgresql://username:password@localhost/databasename')
 bcrypt = Bcrypt(app)
 db.init_app(app)
 
