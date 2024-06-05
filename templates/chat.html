@@ -65,6 +65,21 @@
             }
         });
 
+        function formatDate(dateString) {
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            return new Date(dateString).toLocaleDateString(undefined, options);
+        }
+
+        function formatTimestamp(timestamp) {
+            console.log("Raw timestamp:", timestamp);  // Log the raw timestamp
+            const date = new Date(timestamp);
+            console.log("Parsed date:", date);  // Log the parsed date object
+            const hours = date.getHours().toString().padStart(2, '0');
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            return `${hours}:${minutes}`;
+        }
+        let lastMessageDate = '';
+
         async function sendMessage() {
             const message = document.getElementById('message').value;
 
@@ -105,21 +120,6 @@
                 alert('Please select a User.');
             }
         }
-
-        function formatDate(dateString) {
-            const options = { year: 'numeric', month: 'long', day: 'numeric' };
-            return new Date(dateString).toLocaleDateString(undefined, options);
-        }
-
-        function formatTimestamp(timestamp) {
-            console.log("Raw timestamp:", timestamp);  // Log the raw timestamp
-            const date = new Date(timestamp);
-            console.log("Parsed date:", date);  // Log the parsed date object
-            const hours = date.getHours().toString().padStart(2, '0');
-            const minutes = date.getMinutes().toString().padStart(2, '0');
-            return `${hours}:${minutes}`;
-        }
-        let lastMessageDate = '';
 
         async function fetchMessages() {
             const response = await fetch('/get_messages');
