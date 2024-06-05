@@ -116,11 +116,11 @@ body {
     margin-top: 5px;
 }
 
-.date-separator {
+.date-header {
     text-align: center;
-    margin: 10px 0;
-    font-weight: bold;
-    color: #555;
+    font-size: 0.9em;
+    color: gray;
+    margin: 20px 0;
 }
 
 #users {

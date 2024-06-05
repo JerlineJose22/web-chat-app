@@ -68,6 +68,8 @@
         async function sendMessage() {
             const message = document.getElementById('message').value;
 
+            let currenttime = new Date().toISOString();
+
             if (currentRecipient) {
                 const response = await fetch('/send_message', {
                     method: 'POST',
@@ -77,15 +79,21 @@
                     body: JSON.stringify({
                         sender: username,
                         recipient: currentRecipient,
-                        message: message,
-                        timestamp: fasf
+                        message: message
                     })
                 });
 
                 const result = await response.json();
                 if (result.success) {
                     const chatMessages = document.getElementById('chat-messages');
-                    const timestamp = formatTimestamp(result.timestamp);
+                    const timestamp = formatTimestamp(currenttime);
+                    const messageDate = formatDate(currenttime.split('T')[0]);
+
+                    if (messageDate !== lastMessageDate) {
+                        chatMessages.innerHTML += `<div class="date-header">${messageDate}</div>`;
+                        lastMessageDate = messageDate;
+                    }
+
                     chatMessages.innerHTML += `<div class="message sent"><b>Me:</b> ${message}<div class="timestamp">${timestamp}</div></div>`;
                     document.getElementById('message').value = ''; // Clear the input field
                     chatMessages.scrollTop = chatMessages.scrollHeight; // Auto scroll to bottom
@@ -98,6 +106,11 @@
             }
         }
 
+        function formatDate(dateString) {
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            return new Date(dateString).toLocaleDateString(undefined, options);
+        }
+
         function formatTimestamp(timestamp) {
             console.log("Raw timestamp:", timestamp);  // Log the raw timestamp
             const date = new Date(timestamp);
@@ -106,18 +119,26 @@
             const minutes = date.getMinutes().toString().padStart(2, '0');
             return `${hours}:${minutes}`;
         }
-    
+        let lastMessageDate = '';
 
         async function fetchMessages() {
             const response = await fetch('/get_messages');
             const data = await response.json();
+            let currenttime = new Date().toISOString();
             if (Array.isArray(data)) {  // Check if data is an array
                 const chatMessages = document.getElementById('chat-messages');
                 data.forEach(message => {
                     console.log(message);
                     if (message.sender === currentRecipient && message.recipient === username) {
                         const messageClass = message.sender === username ? 'sent' : 'received';
-                        const timestamp = formatTimestamp(message.timestamp);
+                        const timestamp = formatTimestamp(currenttime);
+                        const messageDate = formatDate(currenttime.split('T')[0]);
+
+                        if (messageDate !== lastMessageDate) {
+                            chatMessages.innerHTML += `<div class="date-header">${messageDate}</div>`;
+                            lastMessageDate = messageDate;
+                        }
+
                         chatMessages.innerHTML += `<div class="message ${messageClass}"><b>${message.sender}:</b> ${message.message}<div class="timestamp">${timestamp}</div></div>`;
                         chatMessages.scrollTop = chatMessages.scrollHeight;
                         console.log("message recieved for ", message.recipient);
@@ -140,6 +161,13 @@
             history.forEach(function (msg) {
                 const messageClass = msg.sender === username ? 'sent' : 'received';
                 const timestamp = formatTimestamp(msg.timestamp);
+                const messageDate = formatDate(msg.timestamp.split('T')[0]);
+
+                if (messageDate !== lastMessageDate) {
+                    chatMessages.innerHTML += `<div class="date-header">${messageDate}</div>`;
+                    lastMessageDate = messageDate;
+                }
+
                 chatMessages.innerHTML += `<div class="message ${messageClass}"><b>${msg.sender === username ? 'Me' : msg.sender}:</b> ${msg.content}<div class="timestamp">${timestamp}</div></div>`;
             });
             chatMessages.scrollTop = chatMessages.scrollHeight;
