@@ -9,7 +9,6 @@ This web chat application allows users to communicate in real-time using Kafka a
 - **Message Persistence**: Messages are stored in PostgreSQL for later retrieval.
 - **Chat History**: Users can view their chat history with other users.
 - **Notification Badge**: Displays unread message count in the user list.
-- **Responsive Design**: The frontend is designed to be responsive across devices.
 
 ## Setup Instructions
 
